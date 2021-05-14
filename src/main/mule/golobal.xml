@@ -15,7 +15,7 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 	<configuration-properties doc:name="Configuration properties" doc:id="ea9edef9-588d-4316-86af-b28c339a9979" file="config/${env}.properties" />
 	<configuration doc:name="Configuration" doc:id="92774fdb-9a9d-4752-b63d-11a8e6d55300" defaultErrorHandler-ref="global-error-handler" />
 	<db:config name="Database_Config" doc:name="Database Config" doc:id="f6452d26-c55c-4d5a-999d-9d6c1aa5b505" >
-		<db:mssql-connection host="DESKTOP-FO9SFVO" user="sa" password="Equbiye1988" databaseName="MyDatabase"/>
+		<db:mssql-connection host="${db.host}" user="sa" password="${db.password}" databaseName="${db.databaseName}"/>
 	</db:config>
 	<file:config name="File_Config" doc:name="File Config" doc:id="9161b3ec-fccf-4533-b6fc-2a0cdce5f5e7" />
 	<http:listener-config name="kif-trade-api-httpListenerConfig">

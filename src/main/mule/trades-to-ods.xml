@@ -27,16 +27,7 @@ values
 	:quantity,
 	:price
 )"]]></ee:set-variable>
-						<ee:set-variable variableName="sqlInputParams" ><![CDATA[%dw 2.0
-output application/json
----
-{
-	index: payload.index,
-	symbol: payload.symbol,
-	operation: payload.operation,
-	quantity:payload.quantity,
-	price:payload.price
-}]]></ee:set-variable>
+						<ee:set-variable resource="mapTrade.dwl" variableName="sqlInputParams" />
 					</ee:variables>
 				</ee:transform>
 				<flow-ref doc:name="insert-to-db-subflow" doc:id="727a855a-58ca-428c-ad00-138be32c7c15" name="insert-to-db-subflow"/>
@@ -62,7 +53,7 @@ output application/json
 						<ee:set-variable variableName="squlQuery" ><![CDATA[%dw 2.0
 output application/json
 ---
-"insert into [dbo].[equity]
+"insert into [dbo].[fx]
 ([index], symbol, operation, quantity, price)
 values
 (
@@ -72,16 +63,7 @@ values
 	:quantity,
 	:price
 )"]]></ee:set-variable>
-						<ee:set-variable variableName="sqlInputParams" ><![CDATA[%dw 2.0
-output application/json
----
-{
-	index: payload.index,
-	symbol: payload.symbol,
-	operation: payload.operation,
-	quantity:payload.quantity,
-	price:payload.price
-}]]></ee:set-variable>
+						<ee:set-variable resource="mapTrade.dwl" variableName="sqlInputParams" />
 					</ee:variables>
 				</ee:transform>
 				<flow-ref doc:name="insert-to-db-subflow" doc:id="a90abc0e-8cd3-461d-a6e6-1701394e12bb" name="insert-to-db-subflow"/>
