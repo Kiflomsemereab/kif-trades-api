@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd 
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<configuration-properties doc:name="Configuration properties" doc:id="ea9edef9-588d-4316-86af-b28c339a9979" file="config/${env}.properties" />
+	<configuration doc:name="Configuration" doc:id="92774fdb-9a9d-4752-b63d-11a8e6d55300" defaultErrorHandler-ref="global-error-handler" />
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="f6452d26-c55c-4d5a-999d-9d6c1aa5b505" >
+		<db:mssql-connection host="${db.host}" user="sa" password="${db.password}" databaseName="${db.databaseName}"/>
+	</db:config>
+	<file:config name="File_Config" doc:name="File Config" doc:id="9161b3ec-fccf-4533-b6fc-2a0cdce5f5e7" />
+	<http:listener-config name="kif-trade-api-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8081" />
+    </http:listener-config>
+    <apikit:config name="kif-trade-api-config" api="resource::0efd05c8-b1c9-4923-b5b0-12f709e77a8c:kif-trade-api:1.0.1:raml:zip:kif-trade-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    
+	<error-handler name="global-error-handler" doc:id="a3b3580b-3e70-4d37-a45b-64801279c75c" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="3c32f4b6-af9d-41b9-a325-24a26e07d912" >
+			<flow-ref doc:name="set-error-response-subflow" doc:id="72bfa702-8414-4b9f-95d7-4c5e9aae8f0c" name="set-error-response-subflow"/>
+		</on-error-propagate>
+	</error-handler>
+	<sub-flow name="set-error-response-subflow" doc:id="640d816f-923b-4e72-84ee-4030f41436d3" >
+		<ee:transform doc:name="Set error response" doc:id="0598f9e4-72c0-4046-b020-027443b97163" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"status":"failed",
+	"errorType": error.errorType,
+	"errorDescription": error.description
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="httpStatus" ><![CDATA[%dw 2.0
+output application/json
+---
+(
+	if(error.errorType.identifier == "NOT_FOUND")
+		404
+	else if (error.errorType.identifier == "METHOD_NOT_ALLOWED")
+		405
+	else if (error.errorType.identifier == "NOT_ACCEPTABLE")
+		406
+	else if (error.errorType.identifier == "UNSUPPORTED_MEDIA_TYPE")
+		415
+	else if (error.errorType.identifier == "NOT_IMPLEMENTED")
+		501
+else
+	500
+)
+]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+</mule>

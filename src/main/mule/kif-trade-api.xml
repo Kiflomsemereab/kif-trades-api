@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd ">
+    <flow name="kif-trade-api-main">
+        <http:listener config-ref="kif-trade-api-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="kif-trade-api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <flow-ref doc:name="set-error-response-subflow" doc:id="189b6835-4fb1-42ae-bba8-c458e2e67212" name="set-error-response-subflow" />
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <flow-ref doc:name="set-error-response-subflow" doc:id="b6cfd7ca-ebc9-4896-8043-2193c2aa447c" name="set-error-response-subflow" />
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <flow-ref doc:name="set-error-response-subflow" doc:id="5fc3fdaf-0a25-4559-b95e-4efc704c3b98" name="set-error-response-subflow" />
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <flow-ref doc:name="set-error-response-subflow" doc:id="a27a5448-ecad-4949-9faf-6f65d715d2a8" name="set-error-response-subflow" />
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <flow-ref doc:name="set-error-response-subflow" doc:id="feeda240-9f77-49a9-b964-149d6e1c31bd" name="set-error-response-subflow" />
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <flow-ref doc:name="set-error-response-subflow" doc:id="4bf583a3-ba25-4fe0-ba28-defafbb40563" name="set-error-response-subflow" />
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="kif-trade-api-console">
+        <http:listener config-ref="kif-trade-api-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="kif-trade-api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="post:\trade\file:application\json:kif-trade-api-config">
+		<flow-ref doc:name="process-trade-to-file-subflow" doc:id="47e81b2e-2162-41c2-9d18-ca164475f1d9" name="process-trade-to-file-subflow"/>
+    </flow>
+    <flow name="post:\trade\ods:application\json:kif-trade-api-config">
+		<flow-ref doc:name="process-trade-to-file-subflow" doc:id="8dcc6f66-5ebd-4882-9bfd-0f8c91bf437e" name="process-trades-to-ods-Subflow"/>
+    </flow>
+</mule>
